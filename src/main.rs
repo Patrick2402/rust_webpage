@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
         .layer(TraceLayer::new_for_http());
 
     // run it with hyper on localhost:3000
-    let socket_addr = SocketAddr::from_str("127.0.0.1:3000")?;
+    let socket_addr = SocketAddr::from_str("0.0.0.0:3000")?;
 
     println!("[Info] Listening on {}", socket_addr);
 
