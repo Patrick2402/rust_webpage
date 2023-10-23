@@ -2,6 +2,7 @@
 name = "rustfun"
 version = "0.1.0"
 edition = "2021"
+links = "libsqlite3-sys"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,16 +11,15 @@ anyhow = "1.0.75"
 askama = { version = "0.12.1", default-features = false, features = ["with-axum", "mime", "mime_guess"] }
 askama_axum = { version = "0.3.0", features = ["serde-json", "markdown"] }
 axum = "0.6.20"
+axum-login = { version = "0.6.0", features = ["sqlx", "sqlite"] }
 axum-macros = "0.3.8"
-casey = "0.4.0"
 dashmap = "5.5.3"
 hyper = "0.14.27"
-paste = "1.0.14"
-phf = "0.11.2"
+rand = { version = "0.8.5", features = ["min_const_gen"] }
 serde = { version = "1.0.189", features = ["derive"] }
+sqlx = {version ="0.6.3", features = ["sqlite", "runtime-tokio-rustls", "macros"]}
 tokio = { version = "1.33.0", features = ["full"] }
 tower = "0.4.13"
 tower-http = { version = "0.4.4", features = ["auth", "fs", "limit", "trace"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-

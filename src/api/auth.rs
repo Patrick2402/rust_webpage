@@ -5,10 +5,14 @@ use axum::{
     response::{IntoResponse, Response},
     Form, Json, RequestExt,
 };
+use axum_login::SqliteStore;
+use axum_login::axum_sessions::SessionLayer;
+use axum_login::axum_sessions::async_session::MemoryStore;
 use dashmap::DashMap;
 use hyper::header::CONTENT_TYPE;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+pub use crate::types::{Id, User};
 
 pub struct JsonOrForm<T>(T);
 
@@ -46,10 +50,13 @@ pub struct Creds {
     password: String,
 }
 
+// TODO: refactor pool as some state or other better mathod
 pub async fn login(
     State(state): State<Arc<LoginDbMockup>>,
+    mut auth: AuthContext,
     JsonOrForm(creds): JsonOrForm<Creds>,
 ) -> StatusCode {
+
     let Some(value) = state.get(&creds.username) else {
         return StatusCode::UNAUTHORIZED
     };
@@ -75,3 +82,5 @@ pub async fn register(
         Ok(())
     }
 }
+
+pub type AuthContext = axum_login::extractors::AuthContext<Id, User, SqliteStore<User>>;
