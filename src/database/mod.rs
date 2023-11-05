@@ -32,9 +32,8 @@ impl User {
             VALUES ($1, $2)",
         )
         .bind(self.id)
-        .bind(self.password_hash)
+        .bind(&self.password_hash)
         .execute(pool)
         .await
     }
 }
-

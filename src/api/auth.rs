@@ -52,8 +52,8 @@ pub struct Creds {
 
 // TODO: refactor pool as some state or other better mathod
 pub async fn login(
-    State(state): State<Arc<LoginDbMockup>>,
     mut auth: AuthContext,
+    State(state): State<Arc<LoginDbMockup>>,
     JsonOrForm(creds): JsonOrForm<Creds>,
 ) -> StatusCode {
 
