@@ -1,0 +1,14 @@
+version: '3.5'
+services:
+  postgres:
+    image: postgres:12-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      # TODO: fetch that from somewhere
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=restwebdev
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    restart: always
