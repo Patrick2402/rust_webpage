@@ -12,6 +12,6 @@ macro_rules! page_no_params {
     };
 }
 
-page_no_params!(Root, root, "index.html");
-page_no_params!(Login, login, "auth/login.html");
-page_no_params!(Register, register, "auth/register.html");
+page_no_params!(Root, root_page, "index.html");
+page_no_params!(Login, login_page, "auth/login.html");
+page_no_params!(Register, register_page, "auth/register.html");
