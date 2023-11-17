@@ -1,3 +1,4 @@
+// this code is useless :)
 use askama::Template;
 use axum::response::{Html, IntoResponse};
 
@@ -18,6 +19,6 @@ pub async fn test_page() -> impl IntoResponse {
     Html(rendered)
 }
 
-pub async fn user() -> &'static str {
+pub async fn user_page() -> &'static str {
     "User"
 }

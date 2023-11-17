@@ -1,44 +1,68 @@
-use axum::async_trait;
-use axum::{
-    extract::{FromRequest, State},
-    http::{Request, StatusCode},
-    response::{IntoResponse, Response},
-    Form, Json, RequestExt,
-};
-use dashmap::DashMap;
-use hyper::header::CONTENT_TYPE;
+use crate::database::models::User;
+use askama_axum::IntoResponse;
+use async_trait::async_trait;
+use axum::{http::StatusCode, response::Redirect, Form};
+use axum_login::{AuthUser, AuthnBackend, UserId};
+use axum_macros::debug_handler;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use sqlx::PgPool;
+use tower_sessions::{cookie::time::Duration, Expiry, MemoryStore, SessionManagerLayer};
 
-pub struct JsonOrForm<T>(T);
+impl AuthUser for User {
+    type Id = i32;
 
-#[async_trait]
-impl<S, B, T> FromRequest<S, B> for JsonOrForm<T>
-where
-    S: Send + Sync,
-    B: Send + 'static + std::fmt::Debug,
-    Json<T>: FromRequest<(), B>,
-    Form<T>: FromRequest<(), B>,
-    T: 'static,
-{
-    type Rejection = Response;
+    fn id(&self) -> Self::Id {
+        self.id
+    }
 
-    async fn from_request(req: Request<B>, _state: &S) -> Result<Self, Self::Rejection> {
-        let content_type_header = req.headers().get(CONTENT_TYPE);
-        let content_type = content_type_header.and_then(|value| value.to_str().ok());
-
-        if let Some(content_type) = content_type {
-            if content_type.starts_with("application/json") {
-                let Json(payload) = req.extract().await.map_err(IntoResponse::into_response)?;
-                return Ok(Self(payload));
-            }
-            let Form(payload) = req.extract().await.map_err(IntoResponse::into_response)?;
-            return Ok(Self(payload));
-        }
-
-        Err(StatusCode::UNSUPPORTED_MEDIA_TYPE.into_response())
+    fn session_auth_hash(&self) -> &[u8] {
+        self.password_hash.as_bytes()
     }
 }
+
+// authentication backend
+#[derive(Clone)]
+pub struct Backend {
+    pool: PgPool,
+}
+
+impl Backend {
+    pub async fn new() -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            pool: PgPool::connect(crate::DATABASE_URL).await?,
+        })
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct Credentials {
+    username: String,
+    password: String,
+}
+
+#[async_trait]
+impl AuthnBackend for Backend {
+    type User = User;
+    type Credentials = Credentials;
+    type Error = sqlx::Error;
+
+    async fn authenticate(
+        &self,
+        Credentials { username, .. }: Self::Credentials,
+    ) -> Result<Option<Self::User>, Self::Error> {
+        sqlx::query_as!(User, "select * from users where username = $1", username)
+            .fetch_optional(&self.pool)
+            .await
+    }
+
+    async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
+        sqlx::query_as!(User, "select * from users where id = $1", user_id)
+            .fetch_optional(&self.pool)
+            .await
+    }
+}
+
+pub type AuthSession = axum_login::AuthSession<Backend>;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Creds {
@@ -46,32 +70,65 @@ pub struct Creds {
     password: String,
 }
 
-pub async fn login(
-    State(state): State<Arc<LoginDbMockup>>,
-    JsonOrForm(creds): JsonOrForm<Creds>,
-) -> StatusCode {
-    let Some(value) = state.get(&creds.username) else {
-        return StatusCode::UNAUTHORIZED
-    };
-
-    if *value == creds.password {
-        StatusCode::OK
-    } else {
-        StatusCode::UNAUTHORIZED
-    }
+pub async fn create_session_resources() -> (Backend, SessionManagerLayer<MemoryStore>) {
+    (
+        Backend::new()
+            .await
+            .map_err(|err| println!("ERROR: cannot establish db connection: {err}"))
+            .unwrap(),
+        SessionManagerLayer::new(MemoryStore::default())
+            .with_secure(false)
+            .with_expiry(Expiry::OnInactivity(Duration::days(1))),
+    )
 }
 
-pub type LoginDbMockup = DashMap<String, String>;
+#[debug_handler]
+pub async fn login(
+    mut auth_session: AuthSession,
+    Form(creds): Form<Credentials>,
+) -> impl IntoResponse {
+    println!("login creds {:?}", &creds);
+    let user = match auth_session.authenticate(creds.clone()).await {
+        Ok(Some(user)) => user,
+        Ok(None) => return StatusCode::UNAUTHORIZED.into_response(),
+        Err(err) => {
+            println!("user login error: {}", err);
+            return StatusCode::BAD_REQUEST.into_response();
+        }
+    };
 
-#[axum_macros::debug_handler]
+    if auth_session.login(&user).await.is_err() {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+
+    Redirect::to("/map").into_response()
+}
+
+#[debug_handler]
 pub async fn register(
-    State(db): State<Arc<LoginDbMockup>>,
-    JsonOrForm(creds): JsonOrForm<Creds>,
-) -> Result<(), StatusCode> {
-    if db.contains_key(&creds.username) {
-        Err(StatusCode::IM_USED)
-    } else {
-        db.insert(creds.username, creds.password);
-        Ok(())
+    auth_session: AuthSession,
+    Form(Credentials { username, password }): Form<Credentials>,
+) -> impl IntoResponse {
+    match sqlx::query!(
+        "insert into users (username, password_hash) values ($1, $2)",
+        username,
+        password
+    )
+    .execute(&auth_session.backend.pool)
+    .await
+    {
+        Ok(pr) => {
+            println!(
+                "Register query, affected rows: {}, creds: {}, {}",
+                pr.rows_affected(),
+                username,
+                password
+            );
+            Redirect::to("/test").into_response()
+        }
+        Err(err) => {
+            println!("Error: {err}");
+            Redirect::to("/register").into_response()
+        }
     }
 }
