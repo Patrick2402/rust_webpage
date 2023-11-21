@@ -175,11 +175,6 @@ impl AuthzBackend for Backend {
         .map(|row| row.group_name)
         .collect();
 
-        println!(
-            "me too!!: {:?}",
-            HashSet::<Self::Permission>::from_iter(permissions.clone())
-        );
-
         Ok(HashSet::from_iter(permissions))
     }
 
@@ -194,8 +189,6 @@ impl AuthzBackend for Backend {
     //         .into_iter()
     //         .map(|row| row.group_name)
     //         .collect();
-
-    //     println!("i ran!!{:?}", HashSet::<Self::Permission>::from_iter(permissions.clone()));
 
     //     Ok(HashSet::from_iter(permissions))
     // }
