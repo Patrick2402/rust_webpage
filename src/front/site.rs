@@ -2,6 +2,8 @@
 use askama::Template;
 use axum::response::{Html, IntoResponse};
 
+use crate::page_no_params;
+
 #[derive(Template)]
 #[template(path = "test.html")]
 pub struct Testo;
@@ -22,3 +24,5 @@ pub async fn test_page() -> impl IntoResponse {
 pub async fn user_page() -> &'static str {
     "User"
 }
+
+page_no_params!(Map, map_page, "map.html");

@@ -19,7 +19,10 @@ mod api;
 mod database;
 mod front;
 
-use crate::api::auth::{create_session_resources, login, register, Backend};
+use crate::{
+    api::auth::{create_session_resources, login, register, Backend},
+    front::site::map_page,
+};
 
 #[macro_use]
 extern crate dotenv_codegen;
@@ -53,8 +56,7 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/test", get(test_page))
         .route("/users", get(user_page))
-        // protects upwards meaning that the routes that are before that
-        // are protected by authentication service
+        .route("/map", get(map_page))
         .route_layer(login_required!(Backend, login_url = "/login"))
         .route("/", get(root_page))
         .route("/auth/register", post(register))
