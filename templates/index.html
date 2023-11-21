@@ -1,50 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>CodePen - A Pen by Mohithpoojary</title>
-    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/all.css'>
-    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css'>
-    <link rel="stylesheet" href="/assets/index.css">
+{% block head %}
+<link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/all.css'>
+<link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css'>
+<link rel="stylesheet" href="/assets/index.css">
+{% endblock %}
 
-</head>
+{% block content %}
+<div id="main-background">
+    <div id="index-nav">
+        <div id="nav-title">Flip the World</div>
+        <div id="sign-in"> <span id="sign-text"><a href="login">Sign in</a></span></div>
+        <div id="sign-in"> <span id="sign-text"><a href="register">Register</a></span></div>
 
-<body>
-    <div id="main-background">
-        <div id="index-nav">
-            <div id="nav-title">Flip the World</div>
-            <div id="sign-in"> <span id="sign-text"><a href="login">Sign in</a></span></div>
-            <div id="sign-in"> <span id="sign-text"><a href="register">Register</a></span></div>
-
+    </div>
+    <div id="index-explore-the-world">
+        <h1 id="title">Step into the World's Upside Down</h1>
+    </div>
+    <div id="content">
+        <div id="left-content">
+            <img id="world-image" src="/assets/world.jpg" alt="World" />
         </div>
-        <div id="index-explore-the-world"><h1 id="title">Step into the World's Upside Down</h1></div>
-        <div id="content">
-            <div id="left-content">
-                <img id="world-image" src="/assets/world.jpg" alt="World" /> 
+        <div id="right-content">
+            <h1>About us</h1>
+            <p>We are two tech enthusiasts, driven by a shared passion for technology and IT. Our journey began when two
+                worlds converged, merging the expertise of a DevOps Engineer and a Rust Developer. </p>
+
+            <p>Our mission is to explore the realms of technology and innovation, striving for excellence in everything
+                we do. We believe that the ever-evolving landscape of IT holds boundless opportunities to make a
+                positive impact. Our commitment to staying at the forefront of technology is unwavering.</p>
+
+            <p>With a fusion of skills and a deep-rooted curiosity, we embark on a quest to harness the power of
+                cutting-edge solutions and create a digital world that is not only innovative but also reliable.
+                Together, we bring the best of both worlds, ensuring that the harmony of technology and artistry is at
+                the core of our endeavors.</p>
+
+            <p>Join us on this exciting journey as we push the boundaries of what's possible in the world of IT and
+                technology. Welcome to our world, where the future is now, and possibilities are endless.</p>
+        </div>
+    </div>
+
+    <div class="footer-basic">
+        <footer>
+            <div class="social">
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href=" #"><i class="fab fa-github"></i></a>
             </div>
-            <div id="right-content">
-                <h1>About us</h1>
-                <p>We are two tech enthusiasts, driven by a shared passion for technology and IT. Our journey began when two worlds converged, merging the expertise of a DevOps Engineer and a Rust Developer. </p>
-
-                <p>Our mission is to explore the realms of technology and innovation, striving for excellence in everything we do. We believe that the ever-evolving landscape of IT holds boundless opportunities to make a positive impact. Our commitment to staying at the forefront of technology is unwavering.</p> 
-                    
-                <p>With a fusion of skills and a deep-rooted curiosity, we embark on a quest to harness the power of cutting-edge solutions and create a digital world that is not only innovative but also reliable. Together, we bring the best of both worlds, ensuring that the harmony of technology and artistry is at the core of our endeavors.</p>
-                    
-                <p>Join us on this exciting journey as we push the boundaries of what's possible in the world of IT and technology. Welcome to our world, where the future is now, and possibilities are endless.</p>
-            </div>
-        </div>
-
-        <div class="footer-basic">
-            <footer>
-                <div class="social">
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-linkedin""></i></a>
-                    <a href="#"><i class="fab fa-github"></i></a>
-                </div>
-                <p class="copyright">Flip the World © 2023</p>
-            </footer>
-        </div>
-</body>
-
-</html>
+            <p class="copyright">Flip the World © 2023</p>
+        </footer>
+    </div>
+    {% call super() %}
+    {% endblock %}
