@@ -1,3 +1,7 @@
+use crate::{
+    api::auth::{create_session_resources, login, register, Backend},
+    front::site::{admin_page, create_asset_dir_service, map_page},
+};
 use anyhow::Result;
 use axum::{
     error_handling::HandleErrorLayer,
@@ -5,24 +9,19 @@ use axum::{
     routing::{get, post},
     BoxError, Router, Server,
 };
-use axum_login::{login_required, AuthManagerLayer};
+use axum_login::{login_required, permission_required, AuthManagerLayer};
 use front::{
     auth::{login_page, register_page, root_page},
     site::{test_page, user_page},
 };
-use std::{net::SocketAddr, path::PathBuf, str::FromStr};
+use std::{net::SocketAddr, str::FromStr};
 use tower::ServiceBuilder;
-use tower_http::{services::ServeDir, trace::TraceLayer};
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod api;
 mod database;
 mod front;
-
-use crate::{
-    api::auth::{create_session_resources, login, register, Backend},
-    front::site::map_page,
-};
 
 #[macro_use]
 extern crate dotenv_codegen;
@@ -39,11 +38,7 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let asset_service = ServeDir::new(
-        [std::env::current_dir()?.to_str().unwrap(), "assets"]
-            .iter()
-            .collect::<PathBuf>(),
-    );
+    let asset_service = create_asset_dir_service();
 
     let (backend, session_layer) = create_session_resources().await;
     let auth_service = ServiceBuilder::new()
@@ -54,6 +49,8 @@ async fn main() -> Result<()> {
         .layer(AuthManagerLayer::new(backend, session_layer));
 
     let app = Router::new()
+        .route("/admin", get(admin_page))
+        .route_layer(permission_required!(Backend, "admin"))
         .route("/test", get(test_page))
         .route("/users", get(user_page))
         .route("/map", get(map_page))

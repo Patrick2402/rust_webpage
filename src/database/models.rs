@@ -1,3 +1,4 @@
+use super::schema::permissions;
 use crate::database::schema::{sessions, users};
 use diesel::prelude::*;
 
@@ -29,4 +30,12 @@ pub struct UserSessionId {
 #[diesel(table_name = sessions)]
 pub struct NewSession {
     pub session_id: String,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable)]
+#[diesel(table_name = permissions)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Permission {
+    pub group_id: i32,
+    pub group_name: String,
 }
