@@ -1,5 +1,6 @@
 use askama::Template;
 
+#[macro_export]
 macro_rules! page_no_params {
     ($name:ident, $fname:ident, $path:expr) => {
         #[derive(Template)]
