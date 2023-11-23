@@ -1,11 +1,13 @@
 use crate::database::models::User;
+use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
 use axum::{http::StatusCode, response::Redirect, Form};
-use axum_login::{AuthUser, AuthnBackend, UserId};
+use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{query, query_as, Connection, PgPool};
+use std::collections::HashSet;
 use tower_sessions::{cookie::time::Duration, Expiry, MemoryStore, SessionManagerLayer};
 
 impl AuthUser for User {
@@ -109,26 +111,124 @@ pub async fn register(
     auth_session: AuthSession,
     Form(Credentials { username, password }): Form<Credentials>,
 ) -> impl IntoResponse {
-    match sqlx::query!(
-        "insert into users (username, password_hash) values ($1, $2)",
-        username,
-        password
-    )
-    .execute(&auth_session.backend.pool)
-    .await
-    {
-        Ok(pr) => {
-            println!(
-                "Register query, affected rows: {}, creds: {}, {}",
-                pr.rows_affected(),
-                username,
-                password
-            );
+    let default_group_id: i32 = 2; // alias normal_user
+
+    let transaction_result = &auth_session
+        .backend
+        .pool
+        .acquire()
+        .await
+        .unwrap()
+        .transaction::<_, _, sqlx::Error>(|tx| {
+            Box::pin(async move {
+                let user = sqlx::query!(
+                    "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id",
+                    username,
+                    password
+                )
+                .fetch_one(&mut **tx)
+                .await?;
+
+                sqlx::query!(
+                    "INSERT INTO user_groups (user_id, group_id) VALUES ($1, $2)",
+                    user.id,
+                    default_group_id
+                )
+                .execute(&mut **tx)
+                .await?;
+
+                Ok(user)
+            })
+        })
+        .await;
+
+    match transaction_result {
+        Ok(user) => {
+            println!("User registered successfully with ID: {}", user.id);
             Redirect::to("/test").into_response()
         }
         Err(err) => {
-            println!("Error: {err}");
+            eprintln!("Error registering user: {err}");
             Redirect::to("/register").into_response()
         }
     }
+}
+
+#[async_trait]
+impl AuthzBackend for Backend {
+    type Permission = String;
+
+    async fn get_user_permissions(
+        &self,
+        user: &Self::User,
+    ) -> Result<HashSet<Self::Permission>, Self::Error> {
+        // Implement logic to retrieve user-specific permissions from the database
+        let permissions: Vec<String> = sqlx::query!(
+            "SELECT p.group_name FROM user_groups ug
+            INNER JOIN permissions p ON ug.group_id = p.group_id
+            WHERE ug.user_id = $1",
+            user.id
+        )
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|row| row.group_name)
+        .collect();
+
+        Ok(HashSet::from_iter(permissions))
+    }
+
+    // async fn get_group_permissions(
+    //     &self,
+    //     _user: &Self::User,
+    // ) -> Result<HashSet<Self::Permission>, Self::Error> {
+    //     // Implement logic to retrieve group-specific permissions from the database
+    //     let permissions: Vec<String> = sqlx::query!("SELECT group_name FROM permissions")
+    //         .fetch_all(&self.pool)
+    //         .await?
+    //         .into_iter()
+    //         .map(|row| row.group_name)
+    //         .collect();
+
+    //     Ok(HashSet::from_iter(permissions))
+    // }
+}
+
+const ADMIN_PASS: &str = dotenv!("ADMIN_PASS");
+
+pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
+    struct Id {
+        id: i32,
+    }
+
+    let id =
+        query_as!(
+            Id,
+            r#"
+        INSERT INTO users (id, username, password_hash)
+        VALUES (
+            DEFAULT,
+            'admin',
+            $1
+        )
+        ON CONFLICT (username) DO UPDATE
+        SET
+            password_hash = EXCLUDED.password_hash
+        RETURNING id
+        "#,
+            ADMIN_PASS
+        )
+        .fetch_one(pool)
+        .await?;
+
+    query!(
+        r#"
+        INSERT INTO user_groups (user_id, group_id)
+        VALUES ($1, (SELECT group_id FROM permissions WHERE group_name = 'admin'))
+        "#,
+        id.id
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
 }
