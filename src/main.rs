@@ -15,7 +15,7 @@ use axum::{
 use axum_login::{login_required, permission_required, AuthManagerLayer};
 use front::{
     auth::{login_page, register_page, root_page},
-    site::{test_page, user_page},
+    site::user_page,
 };
 use sqlx::PgPool;
 use std::{net::SocketAddr, str::FromStr};
@@ -62,7 +62,6 @@ async fn main() -> Result<()> {
         .route("/admin", get(admin_page))
         .route("/admin/users", get(users))
         .route_layer(permission_required!(Backend, "admin"))
-        .route("/test", get(test_page))
         .route("/users", get(user_page))
         .route("/map", get(map_page))
         .route_layer(login_required!(Backend, login_url = "/login"))
