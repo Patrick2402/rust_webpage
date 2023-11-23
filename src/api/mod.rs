@@ -8,6 +8,12 @@ use axum::{
     response::{IntoResponse, Response},
     Form, Json, RequestExt,
 };
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NextPage {
+    next: Option<String>,
+}
 
 /// Utils extractor once something talks json
 pub struct JsonOrForm<T>(T);

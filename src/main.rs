@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
     let query_pool = PgPool::connect(DATABASE_URL).await?;
     create_admin_user(&query_pool)
         .await
-        .inspect_err(|err| println!("These error sugests two consecutive instances run with the same admin password {:?}", err))
+        .inspect_err(|err| println!("These error suggests two consecutive instances run with the same admin password \n {:?}", err))
         .ok();
 
     let asset_service = create_asset_dir_service();
@@ -67,9 +67,8 @@ async fn main() -> Result<()> {
         .route_layer(login_required!(Backend, login_url = "/login"))
         .route("/", get(root_page))
         .route("/auth/register", post(register))
-        .route("/auth/login", post(login))
         .route("/register", get(register_page))
-        .route("/login", get(login_page))
+        .route("/login", get(login_page).post(login))
         .nest_service("/assets", asset_service)
         .layer(Extension(query_pool))
         .layer(auth_service)

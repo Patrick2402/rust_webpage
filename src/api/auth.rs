@@ -1,8 +1,8 @@
-use crate::database::models::User;
+use crate::{api::NextPage, database::models::User};
 use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
-use axum::{http::StatusCode, response::Redirect, Form};
+use axum::{extract::Query, http::StatusCode, response::Redirect, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
 use serde::{Deserialize, Serialize};
@@ -86,24 +86,26 @@ pub async fn create_session_resources() -> (Backend, SessionManagerLayer<MemoryS
 
 #[debug_handler]
 pub async fn login(
+    Query(next_page): Query<NextPage>,
     mut auth_session: AuthSession,
     Form(creds): Form<Credentials>,
 ) -> impl IntoResponse {
-    println!("login creds {:?}", &creds);
     let user = match auth_session.authenticate(creds.clone()).await {
         Ok(Some(user)) => user,
-        Ok(None) => return StatusCode::UNAUTHORIZED.into_response(),
+        Ok(None) => return (StatusCode::UNAUTHORIZED, Redirect::to("login")).into_response(),
         Err(err) => {
             println!("user login error: {}", err);
-            return StatusCode::BAD_REQUEST.into_response();
+            return (StatusCode::BAD_REQUEST, Redirect::to("login")).into_response();
         }
     };
 
     if auth_session.login(&user).await.is_err() {
-        return StatusCode::BAD_REQUEST.into_response();
+        return (StatusCode::BAD_REQUEST, Redirect::to("login")).into_response();
     }
 
-    Redirect::to("/map").into_response()
+    let path = next_page.next.unwrap_or("/map".to_string());
+
+    Redirect::to(&path).into_response()
 }
 
 #[debug_handler]
@@ -112,7 +114,6 @@ pub async fn register(
     Form(Credentials { username, password }): Form<Credentials>,
 ) -> impl IntoResponse {
     let default_group_id: i32 = 2; // alias normal_user
-
     let transaction_result = &auth_session
         .backend
         .pool
@@ -145,7 +146,7 @@ pub async fn register(
     match transaction_result {
         Ok(user) => {
             println!("User registered successfully with ID: {}", user.id);
-            Redirect::to("/test").into_response()
+            Redirect::to("/login").into_response()
         }
         Err(err) => {
             eprintln!("Error registering user: {err}");
