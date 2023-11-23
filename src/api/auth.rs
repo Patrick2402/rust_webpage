@@ -1,13 +1,13 @@
-use std::collections::HashSet;
-
 use crate::database::models::User;
+use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
 use axum::{http::StatusCode, response::Redirect, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
 use serde::{Deserialize, Serialize};
-use sqlx::{Connection, PgPool};
+use sqlx::{query, query_as, Connection, PgPool};
+use std::collections::HashSet;
 use tower_sessions::{cookie::time::Duration, Expiry, MemoryStore, SessionManagerLayer};
 
 impl AuthUser for User {
@@ -192,4 +192,43 @@ impl AuthzBackend for Backend {
 
     //     Ok(HashSet::from_iter(permissions))
     // }
+}
+
+const ADMIN_PASS: &str = dotenv!("ADMIN_PASS");
+
+pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
+    struct Id {
+        id: i32,
+    }
+
+    let id =
+        query_as!(
+            Id,
+            r#"
+        INSERT INTO users (id, username, password_hash)
+        VALUES (
+            DEFAULT,
+            'admin',
+            $1
+        )
+        ON CONFLICT (username) DO UPDATE
+        SET
+            password_hash = EXCLUDED.password_hash
+        RETURNING id
+        "#,
+            ADMIN_PASS
+        )
+        .fetch_one(pool)
+        .await?;
+
+    query!(
+        r#"
+        INSERT INTO user_groups (user_id, group_id)
+        VALUES ($1, (SELECT group_id FROM permissions WHERE group_name = 'admin'))
+        "#,
+        id.id
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
 }

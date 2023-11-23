@@ -1,19 +1,23 @@
 use crate::{
-    api::auth::{create_session_resources, login, register, Backend},
-    front::site::{admin_page, create_asset_dir_service, map_page},
+    api::auth::{create_admin_user, create_session_resources, login, register, Backend},
+    front::{
+        site::{admin_page, create_asset_dir_service, map_page},
+        users::users,
+    },
 };
 use anyhow::Result;
 use axum::{
     error_handling::HandleErrorLayer,
     http::StatusCode,
     routing::{get, post},
-    BoxError, Router, Server,
+    BoxError, Extension, Router, Server,
 };
 use axum_login::{login_required, permission_required, AuthManagerLayer};
 use front::{
     auth::{login_page, register_page, root_page},
     site::{test_page, user_page},
 };
+use sqlx::PgPool;
 use std::{net::SocketAddr, str::FromStr};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
@@ -38,6 +42,12 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let query_pool = PgPool::connect(DATABASE_URL).await?;
+    create_admin_user(&query_pool)
+        .await
+        .inspect_err(|err| println!("These error sugests two consecutive instances run with the same admin password {:?}", err))
+        .ok();
+
     let asset_service = create_asset_dir_service();
 
     let (backend, session_layer) = create_session_resources().await;
@@ -50,6 +60,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/admin", get(admin_page))
+        .route("/admin/users", get(users))
         .route_layer(permission_required!(Backend, "admin"))
         .route("/test", get(test_page))
         .route("/users", get(user_page))
@@ -61,6 +72,7 @@ async fn main() -> Result<()> {
         .route("/register", get(register_page))
         .route("/login", get(login_page))
         .nest_service("/assets", asset_service)
+        .layer(Extension(query_pool))
         .layer(auth_service)
         .layer(TraceLayer::new_for_http());
 

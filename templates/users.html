@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block content %}
+<p>are users useful to have in a non profit organization</p>
+<table>
+    <tr>
+        <th>id</th>
+        <th>username</th>
+        <th>role</th>
+    </tr>
+{% for user in users %}
+    <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.role }}</td>
+    <?tr>
+{% endfor %}
+</table>
+{% call super() %}
+{% endblock %}
