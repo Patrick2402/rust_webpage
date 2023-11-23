@@ -10,47 +10,39 @@
     <div id=pos></div>
     <div id=op_pos></div>
     <button type="button" onclick="go_to_pos()">Take me there!</button>
-        <div id="map" style="width: 900px; height: 580px"></div>
-        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-        <script>
-            const error = () => {}
-            var options = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
-            var map
+    <div id="map" style="width: 900px; height: 580px"></div>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script>
+        const error = () => { }
+        var options = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
+        var map
 
-            function setMapOptions(position) {
+        function setMapOptions(position) {
+            var lat = position.coords.latitude
+            var long = position.coords.longitude
+            var op_lat = -lat
+            var op_long = -180 + long
+            document.getElementById("pos").innerHTML = `Hello your position is [${lat}, ${long}]`;
+            document.getElementById("op_pos").innerHTML = `Opposite of the world is [${op_lat}, ${op_long}]`;
+            mapOptions = { center: [lat, long], zoom: 10 }
+            map = new L.map('map', mapOptions);
+            var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+            map.addLayer(layer);
+        }
+
+        navigator.geolocation.getCurrentPosition(setMapOptions, error, options);
+
+        function go_to_pos() {
+            function lmao(position) {
                 var lat = position.coords.latitude
                 var long = position.coords.longitude
-
                 var op_lat = -lat
                 var op_long = -180 + long
-
-                document.getElementById("pos").innerHTML = `Hello your position is [${lat}, ${long}]`;
-                document.getElementById("op_pos").innerHTML = `Opposite of the world is [${op_lat}, ${op_long}]`;
-
-                mapOptions = {
-                    center: [lat, long],
-                    zoom: 10,
-                }
-                console.log(mapOptions)
-                map = new L.map('map', mapOptions);
-                var layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-                map.addLayer(layer);
+                map.setView([op_lat, op_long], 13);
             }
-            navigator.geolocation.getCurrentPosition(setMapOptions, error, options);
-
-            function go_to_pos() {
-                function lmao(position) {
-                    var lat = position.coords.latitude
-                    var long = position.coords.longitude
-
-                    var op_lat = -lat
-                    var op_long = -180 + long
-                    console.log(op_lat, op_long)
-                    map.setView([op_lat, op_long], 13);
-                }
-                navigator.geolocation.getCurrentPosition(lmao, error, options);
-            }
-        </script>
+            navigator.geolocation.getCurrentPosition(lmao, error, options);
+        }
+    </script>
 </body>
 
 </html>
