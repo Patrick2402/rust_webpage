@@ -1,19 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>HELLO BITCHES</title>
+{% extends "base.html" %}
+{% block head %}
     <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/all.css'>
     <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css'>
     <link rel="stylesheet" href="/assets/style.css">
-</head>
-
-<body>
+{% endblock %}
+{% block content %}
     <div class="container">
         <div class="screen">
             <div class="screen__content">
-                {% block content %}{% endblock %}
+                {% block content_auth %}{% endblock %}
                 <div class="social-login">
                     <h3>log in via</h3>
                     <div class="social-icons">
@@ -31,6 +26,5 @@
             </div>
         </div>
     </div>
-</body>
-
-</html>
+{% call super() %}
+{% endblock %}

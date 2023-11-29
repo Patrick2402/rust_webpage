@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT u.id,u.username, p.group_name AS role\n                FROM users u\n                JOIN user_groups ug ON u.id = ug.user_id\n                JOIN permissions p ON ug.group_id = p.group_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "role",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "009b22bf45ed8eab0f3026fdd652a164eefeb4928f771e5a8bdb617381f8791c"
+}

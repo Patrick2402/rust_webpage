@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO user_groups (user_id, group_id)\n        VALUES ($1, (SELECT group_id FROM permissions WHERE group_name = 'admin'))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c742761a7df4dc9dd3bb204d5a8c86215850c66480eb7baabc2958642f56c870"
+}
