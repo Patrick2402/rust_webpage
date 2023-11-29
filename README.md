@@ -1,5 +1,6 @@
 # helo this is some kind of app
 
+[![build + test](https://github.com/Patrick2402/rust_webpage/actions/workflows/rust.yml/badge.svg)](https://github.com/Patrick2402/rust_webpage/workflows/rust.yml)
 
 ## TODO:
 ```

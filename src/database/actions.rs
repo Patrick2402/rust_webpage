@@ -6,8 +6,7 @@ use super::schema::users;
 
 /// diesel util function we might no need that like ever
 pub(crate) fn _create_user(conn: &mut PgConnection, username: &str, password_hash: &str) -> User {
-    let user =
-        NewUser {
+    let user = NewUser {
             username,
             password_hash,
         };
