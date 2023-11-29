@@ -1,5 +1,7 @@
 use crate::{
-    api::auth::{create_admin_user, create_session_resources, login, register, Backend},
+    api::auth::{
+        create_admin_user, create_session_resources, delete_user, login, register, Backend,
+    },
     front::{
         site::{admin_page, create_asset_dir_service, map_page},
         users::users,
@@ -9,7 +11,7 @@ use anyhow::Result;
 use axum::{
     error_handling::HandleErrorLayer,
     http::StatusCode,
-    routing::{get, post},
+    routing::{delete, get, post},
     BoxError, Extension, Router, Server,
 };
 use axum_login::{login_required, permission_required, AuthManagerLayer};
@@ -61,7 +63,8 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/admin", get(admin_page))
         .route("/admin/users", get(users))
-        .route_layer(permission_required!(Backend, "admin"))
+        .route("/api/delete_user", delete(delete_user))
+        .route_layer(permission_required!(Backend, "admin", "/map"))
         .route("/users", get(user_page))
         .route("/map", get(map_page))
         .route_layer(login_required!(Backend, login_url = "/login"))

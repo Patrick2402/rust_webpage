@@ -1,12 +1,13 @@
+use crate::DATABASE_URL;
 use crate::{api::NextPage, database::models::User};
 use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
-use axum::{extract::Query, http::StatusCode, response::Redirect, Form};
+use axum::{extract::Query, http::StatusCode, response::Redirect, Extension, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
 use serde::{Deserialize, Serialize};
-use sqlx::{query, query_as, Connection, PgPool};
+use sqlx::{query, query_as, Connection, PgPool, Pool, Postgres};
 use std::collections::HashSet;
 use tower_sessions::{cookie::time::Duration, Expiry, MemoryStore, SessionManagerLayer};
 
@@ -31,7 +32,7 @@ pub struct Backend {
 impl Backend {
     pub async fn new() -> Result<Self, sqlx::Error> {
         Ok(Self {
-            pool: PgPool::connect(crate::DATABASE_URL).await?,
+            pool: PgPool::connect(DATABASE_URL).await?,
         })
     }
 }
@@ -50,11 +51,18 @@ impl AuthnBackend for Backend {
 
     async fn authenticate(
         &self,
-        Credentials { username, .. }: Self::Credentials,
+        Credentials { username, password }: Self::Credentials,
     ) -> Result<Option<Self::User>, Self::Error> {
-        sqlx::query_as!(User, "select * from users where username = $1", username)
+        println!("{:?}, {:?}", username, password);
+
+        let user = sqlx::query_as!(User, "select * from users where username = $1", username)
             .fetch_optional(&self.pool)
-            .await
+            .await?;
+
+        Ok(match user {
+            Some(user) if user.password_hash == password => Some(user),
+            _ => None,
+        })
     }
 
     async fn get_user(&self, user_id: &UserId<Self>) -> Result<Option<Self::User>, Self::Error> {
@@ -90,17 +98,18 @@ pub async fn login(
     mut auth_session: AuthSession,
     Form(creds): Form<Credentials>,
 ) -> impl IntoResponse {
-    let user = match auth_session.authenticate(creds.clone()).await {
-        Ok(Some(user)) => user,
-        Ok(None) => return (StatusCode::UNAUTHORIZED, Redirect::to("login")).into_response(),
-        Err(err) => {
-            println!("user login error: {}", err);
-            return (StatusCode::BAD_REQUEST, Redirect::to("login")).into_response();
-        }
-    };
+    let user =
+        match auth_session.authenticate(creds.clone()).await {
+            Ok(Some(user)) => user,
+            Ok(None) => return Redirect::to("/login").into_response(),
+            Err(err) => {
+                println!("user login error: {}", err);
+                return Redirect::to("/login").into_response();
+            }
+        };
 
     if auth_session.login(&user).await.is_err() {
-        return (StatusCode::BAD_REQUEST, Redirect::to("login")).into_response();
+        return Redirect::to("/login").into_response();
     }
 
     let path = next_page.next.unwrap_or("/map".to_string());
@@ -153,6 +162,37 @@ pub async fn register(
             Redirect::to("/register").into_response()
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Username {
+    username: String,
+}
+
+#[debug_handler]
+pub async fn delete_user(
+    _auth_session: AuthSession,
+    Extension(pool): Extension<Pool<Postgres>>,
+    Query(Username { username }): Query<Username>,
+) -> Result<impl IntoResponse, StatusCode> {
+    println!("hi there");
+
+    sqlx::query_as!(User, "select * from users where username = $1", username)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|_| StatusCode::NOT_FOUND)?;
+
+    let rows_affected = sqlx::query!("DELETE FROM users WHERE username = $1", username)
+        .execute(&pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .rows_affected();
+
+    if rows_affected == 0 {
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    Ok(StatusCode::OK.into_response())
 }
 
 #[async_trait]
@@ -231,5 +271,6 @@ pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
     )
     .execute(pool)
     .await?;
+
     Ok(())
 }
