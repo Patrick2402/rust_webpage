@@ -8,11 +8,16 @@
 ```
 
 
-## The original sin: combining diesel and sqlx for extra dependency count
+### The original sin: combining diesel and sqlx for extra dependency count
 ```
 cargo install diesel_cli --no-default-features --features postgres
 brew install libpq
 brew link --force libpq
+```
+
+### important when updating the schema
+```
+cargo install sqlx-cli --no-default-features --features native-tls,postgres
 ```
 
 quick fix 1:
