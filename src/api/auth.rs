@@ -6,6 +6,7 @@ use async_trait::async_trait;
 use axum::{extract::Query, http::StatusCode, response::Redirect, Extension, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, Connection, PgPool, Pool, Postgres};
 use std::collections::HashSet;
@@ -60,7 +61,15 @@ impl AuthnBackend for Backend {
             .await?;
 
         Ok(match user {
-            Some(user) if user.password_hash == password => Some(user),
+            Some(user) => {
+                let mut salt: [u8; 16] = [0; 16];
+                salt.copy_from_slice(user.salt.as_bytes());
+
+                bcrypt::hash_with_salt(password, 6, salt)
+                    .ok()
+                    .map(|hash| (user.password_hash == hash.to_string()).then_some(user))
+                    .flatten()
+            }
             _ => None,
         })
     }
@@ -242,6 +251,11 @@ pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
         id: i32,
     }
 
+    let mut salt = [0; 16];
+    let mut rng = rand::thread_rng();
+    rng.fill_bytes(&mut salt);
+    let hash = bcrypt::hash_with_salt(ADMIN_PASS, super::BCRYPT_HASHING_COST, salt)?.to_string();
+
     let id =
         query_as!(
             Id,
@@ -257,7 +271,7 @@ pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
             password_hash = EXCLUDED.password_hash
         RETURNING id
         "#,
-            ADMIN_PASS
+            hash
         )
         .fetch_one(pool)
         .await?;

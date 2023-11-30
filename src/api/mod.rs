@@ -10,6 +10,8 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 
+const BCRYPT_HASHING_COST: u32 = 6;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NextPage {
     next: Option<String>,

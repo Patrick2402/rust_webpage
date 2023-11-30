@@ -33,10 +33,17 @@ diesel::table! {
         id -> Int4,
         username -> Varchar,
         password_hash -> Varchar,
+        salt -> Varchar,
     }
 }
 
 diesel::joinable!(user_groups -> permissions (group_id));
 diesel::joinable!(user_groups -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(groups, permissions, sessions, user_groups, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    groups,
+    permissions,
+    sessions,
+    user_groups,
+    users,
+);
