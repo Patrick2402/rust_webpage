@@ -1,4 +1,5 @@
 pub(crate) mod auth;
+pub(crate) mod hashes;
 
 use axum::async_trait;
 use axum::http::header::CONTENT_TYPE;
@@ -9,6 +10,8 @@ use axum::{
     Form, Json, RequestExt,
 };
 use serde::{Deserialize, Serialize};
+
+const BCRYPT_HASHING_COST: u32 = 6;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NextPage {

@@ -1,3 +1,4 @@
+use crate::api::hashes::{decode_salt, encode_salt, generate_salt};
 use crate::DATABASE_URL;
 use crate::{api::NextPage, database::models::User};
 use anyhow::Result;
@@ -6,6 +7,7 @@ use async_trait::async_trait;
 use axum::{extract::Query, http::StatusCode, response::Redirect, Extension, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, Connection, PgPool, Pool, Postgres};
 use std::collections::HashSet;
@@ -59,8 +61,12 @@ impl AuthnBackend for Backend {
             .fetch_optional(&self.pool)
             .await?;
 
-        Ok(match user {
-            Some(user) if user.password_hash == password => Some(user),
+        Ok(match user.inspect(|u| println!("{:?}", u)) {
+            Some(user) => decode_salt(&user.salt).and_then(|salt| {
+                bcrypt::hash_with_salt(password, 6, salt)
+                    .ok()
+                    .and_then(|hash| (user.password_hash == hash.to_string()).then_some(user))
+            }),
             _ => None,
         })
     }
@@ -122,7 +128,10 @@ pub async fn register(
     auth_session: AuthSession,
     Form(Credentials { username, password }): Form<Credentials>,
 ) -> impl IntoResponse {
+    let salt = generate_salt();
+    let encoded = encode_salt(salt);
     let default_group_id: i32 = 2; // alias normal_user
+
     let transaction_result = &auth_session
         .backend
         .pool
@@ -132,9 +141,10 @@ pub async fn register(
         .transaction::<_, _, sqlx::Error>(|tx| {
             Box::pin(async move {
                 let user = sqlx::query!(
-                    "INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id",
+                    "INSERT INTO users (username, password_hash, salt) VALUES ($1, $2, $3) RETURNING id",
                     username,
-                    password
+                    password,
+                    encoded
                 )
                 .fetch_one(&mut **tx)
                 .await?;
@@ -242,22 +252,33 @@ pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
         id: i32,
     }
 
+    let mut salt = [0; 16];
+    let mut rng = rand::thread_rng();
+    rng.fill_bytes(&mut salt);
+    let hash = bcrypt::hash_with_salt(ADMIN_PASS, super::BCRYPT_HASHING_COST, salt)?.to_string();
+    let encoded_salt = encode_salt(salt);
+
+    dbg!(&encoded_salt);
+
     let id =
         query_as!(
             Id,
             r#"
-        INSERT INTO users (id, username, password_hash)
+        INSERT INTO users (id, username, password_hash, salt)
         VALUES (
             DEFAULT,
             'admin',
-            $1
+            $1,
+            $2
         )
         ON CONFLICT (username) DO UPDATE
         SET
-            password_hash = EXCLUDED.password_hash
+            password_hash = EXCLUDED.password_hash,
+            salt = EXCLUDED.salt
         RETURNING id
         "#,
-            ADMIN_PASS
+            hash,
+            encoded_salt,
         )
         .fetch_one(pool)
         .await?;

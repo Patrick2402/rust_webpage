@@ -17,6 +17,11 @@
         "ordinal": 2,
         "name": "password_hash",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "salt",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -25,6 +30,7 @@
       ]
     },
     "nullable": [
+      false,
       false,
       false,
       false
