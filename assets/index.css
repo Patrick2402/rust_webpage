@@ -56,7 +56,10 @@ body {
     align-items: center;
     
 }
-#sign-in span {
+a {
+    text-decoration: unset;
+}
+.sign-in span {
     width: 6em;
     border-radius: 12px;
     background-color:#007FFF ;
@@ -65,15 +68,16 @@ body {
     justify-content: center;
     display: flex;
     transition: all 0.6s ease;
-}
-#sign-in span a {
-    text-decoration: none;
+    text-decoration: unset;
+    font-size: large;
     color: white;
+    margin: 0.8em;
 }
-#sign-in span:hover {
+.sign-in span:hover {
     cursor: pointer;
     background-color: #006cd7;
 }
+
 #content{
     width: 100%;
     min-height: 70vh;

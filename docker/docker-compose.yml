@@ -8,7 +8,7 @@ services:
       - POSTGRES_USER=user
       # TODO: fetch that from somewhere
       - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=restwebdev
+      - POSTGRES_DB=rustwebdev
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data
     restart: always
