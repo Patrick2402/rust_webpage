@@ -26,7 +26,6 @@ diesel::table! {
         id -> Int4,
         username -> Varchar,
         password_hash -> Varchar,
-        salt -> Varchar,
     }
 }
 

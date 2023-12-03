@@ -2,6 +2,7 @@
 
 {% block content_auth %}
 <form class="login" method="post" action="/auth/register">
+    <h1>Sign up</h1>
     <div class="login__field">
         <i class="login__icon fas fa-user"></i>
         <input type="text" name="username" class="login__input" placeholder="User name / Email">
@@ -10,10 +11,11 @@
         <i class="login__icon fas fa-lock"></i>
         <input type="password" name="password" class="login__input" placeholder="Password">
     </div>
-    <button class="button login__submit">
-        <span class="button__text">Register</span>
-        <i class="button__icon fas fa-chevron-right"></i>
-    </button>
+    <div class="button_box">  
+        <button class="button_login__submit">
+            <span class="button__text">Sign up</span>
+        </button>
+    </div>
 </form>
 {% call super() %}
 {% endblock %}

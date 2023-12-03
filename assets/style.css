@@ -1,19 +1,88 @@
 @import url('https://fonts.googleapis.com/css?family=Raleway:400,700');
 
 body {
-  background-color:rgb(6, 5, 5);
+  background-color:rgb(46,46,46);
   color:white;
   width: 100%;
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 .login {
-  width: 30vw;
-  height: 50vh;
-  background-color: red;
+  min-width: 30vw;
+  height: 40vh;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
+
+.login__field {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.6em;
+  gap: 1rem;
+}
+.login__icon {
+  font-size: 2.2rem;
+}
+
+.login__input {
+  font-size: 2.0rem;
+  padding: 0.1rem;
+  border-radius: 7px;
+}
+input {
+  border: none;
+}
+input:user-invalid {
+  border: 2px solid red;
+}
+ input:focus{
+  outline: none;
+}
+
+input:user-invalid + span::before {
+  content: "✖";
+  color: red;
+}
+
+.button_login__submit, .button_login__submit {
+  color: white;
+  border: none;
+  font-size: 2.0rem;
+  border-radius: 7px;
+  background-color:#007FFF ;
+  padding: 0.8em;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  transition: all 0.6s ease;
+  text-decoration: unset;
+  font-size: large;
+  font-weight: bold;
+}
+
+.button_box {
+  width: 75%;
+  display: flex;
+  justify-content: left;
+  padding-left: 30px;
+
+}
+
+.button_login__submit:hover {
+  cursor: pointer;
+  background-color: #006cd7;
+}
+
+.login h1 {
+  letter-spacing: 3px;
+  font-size: 2.5rem;
+}
+
