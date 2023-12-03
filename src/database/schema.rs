@@ -40,10 +40,4 @@ diesel::table! {
 diesel::joinable!(user_groups -> permissions (group_id));
 diesel::joinable!(user_groups -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    groups,
-    permissions,
-    sessions,
-    user_groups,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(groups, permissions, sessions, user_groups, users,);

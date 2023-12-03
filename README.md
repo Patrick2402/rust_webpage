@@ -18,6 +18,8 @@ brew link --force libpq
 ### important when updating the schema
 ```
 cargo install sqlx-cli --no-default-features --features native-tls,postgres
+
+cargo sqlx prepare -- --all-targets --all-features
 ```
 
 quick fix 1:

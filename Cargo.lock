@@ -1493,6 +1493,7 @@ dependencies = [
  "axum",
  "axum-login",
  "axum-macros",
+ "base64",
  "bcrypt",
  "const_format",
  "diesel",

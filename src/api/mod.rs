@@ -1,4 +1,5 @@
 pub(crate) mod auth;
+pub(crate) mod hashes;
 
 use axum::async_trait;
 use axum::http::header::CONTENT_TYPE;

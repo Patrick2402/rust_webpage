@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block head %}
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 {% endblock %}
 {% block content %}
 <div id=pos></div>
 <div id=op_pos></div>
 <button type="button" onclick="go_to_pos()">Take me there!</button>
 <div id="map" style="width: 900px; height: 580px"></div>
-<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <script>
     const error = () => { }
     var options = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
