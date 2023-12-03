@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
         .route("/admin", get(admin_page))
         .route("/admin/users", get(users))
         .route("/api/delete_user", delete(delete_user))
-        .route_layer(permission_required!(Backend, "admin", "/map"))
+        // .route_layer(permission_required!(Backend, "admin", "/map"))
         .route("/users", get(user_page))
         .route("/map", get(map_page))
         .route_layer(login_required!(Backend, login_url = "/login"))
