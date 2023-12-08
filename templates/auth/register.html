@@ -1,6 +1,15 @@
 {% extends "auth/auth_base.html" %}
 
 {% block content_auth %}
+<nav>
+    <a href="/" class="admin-user-brick">
+        <div> <span style="color: white;">Homepage</span></div>
+    </a>
+    <a href="/login" class="admin-user-brick">
+        <div> <span style="color: white;">Login</span></div>
+    </a>
+</nav>
+<div class="form-wieczorek">
 <form class="login" method="post" action="/auth/register">
     <h1>Sign up</h1>
     <div class="login__field">
@@ -17,5 +26,6 @@
         </button>
     </div>
 </form>
+</div>
 {% call super() %}
 {% endblock %}

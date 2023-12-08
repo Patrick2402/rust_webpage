@@ -1,13 +1,6 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    groups (group_id) {
-        group_id -> Int4,
-        group_name -> Varchar,
-    }
-}
-
-diesel::table! {
     permissions (group_id) {
         group_id -> Int4,
         group_name -> Varchar,
@@ -40,4 +33,9 @@ diesel::table! {
 diesel::joinable!(user_groups -> permissions (group_id));
 diesel::joinable!(user_groups -> users (user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(groups, permissions, sessions, user_groups, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    permissions,
+    sessions,
+    user_groups,
+    users,
+);

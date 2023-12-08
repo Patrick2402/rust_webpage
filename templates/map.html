@@ -1,11 +1,25 @@
 {% extends "base.html" %}
 {% block head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
+<link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/all.css'>
+<link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css'>
+<link rel="stylesheet" href="/assets/users.css">
 {% endblock %}
 {% block content %}
+<nav>
+    <a href="/" class="admin-user-brick">
+        <div> <span style="color: white;">Homepage</span></div>
+        </a>
+    <a href="/login"class="admin-user-brick">
+        <div> <span style="color: white;">Log out</span></div>
+    </a>
+    <a href="#" class="admin-user-brick">
+        <div> <span style="color: white;">Change password</span></div>
+    </a>
+</nav>
 <div id=pos></div>
 <div id=op_pos></div>
-<button type="button" onclick="go_to_pos()">Take me there!</button>
+<button type="button" class="button-gen-map" onclick="go_to_pos()">Take me there!</button>
 <div id="map" style="width: 900px; height: 580px"></div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <script>
