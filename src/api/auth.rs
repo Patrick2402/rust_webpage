@@ -4,6 +4,7 @@ use crate::{api::NextPage, database::models::User};
 use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
+use axum::middleware::{from_fn, Next, FromFnLayer};
 use axum::{extract::Query, http::StatusCode, response::Redirect, Extension, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
@@ -11,6 +12,7 @@ use bcrypt::hash_with_salt;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, Connection, PgPool, Pool, Postgres};
+use tower::Layer;
 use std::collections::HashSet;
 use tower_sessions::{cookie::time::Duration, Expiry, MemoryStore, SessionManagerLayer};
 
@@ -22,6 +24,7 @@ impl AuthUser for User {
     }
 
     fn session_auth_hash(&self) -> &[u8] {
+        dbg!(self);
         self.password_hash.as_bytes()
     }
 }
@@ -227,6 +230,8 @@ impl AuthzBackend for Backend {
         .into_iter()
         .map(|row| row.group_name)
         .collect();
+
+        dbg!(user, &permissions);
 
         Ok(HashSet::from_iter(permissions))
     }
