@@ -4,9 +4,11 @@ use crate::{api::NextPage, database::models::User};
 use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
+use axum::middleware::{from_fn, FromFnLayer, Next};
 use axum::{extract::Query, http::StatusCode, response::Redirect, Extension, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
+use bcrypt::hash_with_salt;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sqlx::{query, query_as, Connection, PgPool, Pool, Postgres};
@@ -63,7 +65,7 @@ impl AuthnBackend for Backend {
 
         Ok(match user.inspect(|u| println!("{:?}", u)) {
             Some(user) => decode_salt(&user.salt).and_then(|salt| {
-                bcrypt::hash_with_salt(password, 6, salt)
+                hash_with_salt(password, 6, salt)
                     .ok()
                     .and_then(|hash| (user.password_hash == hash.to_string()).then_some(user))
             }),
@@ -130,6 +132,7 @@ pub async fn register(
 ) -> impl IntoResponse {
     let salt = generate_salt();
     let encoded = encode_salt(salt);
+    let hashed_password = hash_with_salt(password, 6, salt).unwrap().to_string();
     let default_group_id: i32 = 2; // alias normal_user
 
     let transaction_result = &auth_session
@@ -143,7 +146,7 @@ pub async fn register(
                 let user = sqlx::query!(
                     "INSERT INTO users (username, password_hash, salt) VALUES ($1, $2, $3) RETURNING id",
                     username,
-                    password,
+                    hashed_password,
                     encoded
                 )
                 .fetch_one(&mut **tx)
@@ -257,8 +260,6 @@ pub async fn create_admin_user(pool: &PgPool) -> anyhow::Result<()> {
     rng.fill_bytes(&mut salt);
     let hash = bcrypt::hash_with_salt(ADMIN_PASS, super::BCRYPT_HASHING_COST, salt)?.to_string();
     let encoded_salt = encode_salt(salt);
-
-    dbg!(&encoded_salt);
 
     let id =
         query_as!(
