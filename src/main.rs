@@ -14,6 +14,7 @@ use axum::{
     routing::{delete, get, post},
     BoxError, Extension, Router, Server,
 };
+use axum_csrf::{CsrfConfig, CsrfLayer};
 use axum_login::{login_required, permission_required, AuthManagerLayer};
 use front::{
     auth::{login_page, register_page, root_page},
@@ -44,6 +45,8 @@ async fn main() -> Result<()> {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+
+    let config = CsrfConfig::default();
 
     let query_pool = PgPool::connect(DATABASE_URL).await?;
     create_admin_user(&query_pool)
@@ -81,6 +84,7 @@ async fn main() -> Result<()> {
         .nest_service("/assets", asset_service)
         .layer(Extension(query_pool))
         .layer(auth_service)
+        .layer(CsrfLayer::new(config))
         .layer(DefaultHeadersLayer::new(default_headers))
         .layer(TraceLayer::new_for_http());
 

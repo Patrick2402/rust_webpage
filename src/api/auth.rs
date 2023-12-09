@@ -94,7 +94,7 @@ pub async fn create_session_resources() -> (Backend, SessionManagerLayer<MemoryS
             .map_err(|err| println!("ERROR: cannot establish db connection: {err}"))
             .unwrap(),
         SessionManagerLayer::new(MemoryStore::default())
-            .with_secure(true)
+            .with_secure(false)
             .with_expiry(Expiry::OnInactivity(Duration::days(1))),
     )
 }
