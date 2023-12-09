@@ -16,11 +16,14 @@
     <a href="#" class="admin-user-brick">
         <div> <span style="color: white;">Change password</span></div>
     </a>
+    <a href="/admin/users" class="admin-user-brick">
+	<div> <span style="color: white;">Settings</span></div>
+    </a>
 </nav>
-<div id=pos></div>
-<div id=op_pos></div>
-<button type="button" class="button-gen-map" onclick="go_to_pos()">Take me there!</button>
-<div id="map" style="width: 900px; height: 580px"></div>
+<div id=pos style="margin:1em; text-aling:left;"></div>
+<div id=op_pos style="margin:1em; text-aling:left;";></div>
+<button type="button" class="button-gen-map" style="margin-bottom:1em;" onclick="go_to_pos()">Take me there!</button>
+<div id="map" style="width: 100%; height: 470px"></div>
 <script src="assets/maps.min.js"></script>
 <script>
     const error = () => { }
@@ -49,6 +52,7 @@
             var op_lat = -lat
             var op_long = -180 + long
             map.setView([op_lat, op_long], 13);
+	    var marker = new  L.marker([op_lat,op_long]).addTo(map).bindPopup('You flipped the world').openPopup();
         }
         navigator.geolocation.getCurrentPosition(lmao, error, options);
     }
