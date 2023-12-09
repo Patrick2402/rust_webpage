@@ -1,24 +1,45 @@
 {% extends "base.html" %}
 {% block head %}
+    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/all.css'>
+    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css'>
+    <link rel="stylesheet" href="/assets/users.css">
 {% endblock %}
 {% block content %}
-<p>are users useful to have in a non profit organization</p>
-<table>
-    <tr>
-        <th>id</th>
-        <th>username</th>
-        <th>role</th>
-        <th>delete</th>
-    </tr>
-{% for user in users %}
-    <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ user.role }}</td>
-        <td><button class="remove_user" data-username="{{ user.username }}">delete</button></td>
-    <?tr>
-{% endfor %}
-</table>
+<nav>
+    <a href="/" class="admin-user-brick">
+        <div class="homepage"> <span style="color: white;">Homepage</span></div>
+        </a>
+    <a href="/login"class="admin-user-brick">
+        <div class="log-out" > <span style="color: white;">Log out</span></div>
+        </a>
+    <a href="/map" class="admin-user-brick">
+        <div class="admin-map" > <span style="color: white;">Map</span></div>
+    </a>
+</nav>
+<div class="admin-user-title">
+    <h1>Are users useful to have in a non profit organization</h1>
+</div>
+<div class="admin-user-table">
+    <table class="admin-user-table-content">
+        <tr>
+            <th>Id</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Delete user</th>
+        </tr>
+    {% for user in users %}
+        <tr>
+            <td><b>{{user.id}}</b></td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.role }}</td>
+            <td>
+                <button class="remove_user" data-username="{{ user.username }}">Delete</button>
+            </td>
+        <tr>
+    {% endfor %}
+    </table>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
     $('.remove_user').click(function() {

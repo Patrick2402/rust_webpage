@@ -80,7 +80,7 @@ async fn main() -> Result<()> {
     // run it with hyper on localhost:3000
     let socket_addr = SocketAddr::from_str("0.0.0.0:3000")?;
 
-    println!("[Info] Listening on {}", socket_addr);
+    println!("[Ester Egg - kuba nie nawidze cie za bugi <3] Listening on {}", socket_addr);
 
     Server::bind(&socket_addr)
         .serve(app.into_make_service())
