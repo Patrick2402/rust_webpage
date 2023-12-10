@@ -4,7 +4,6 @@ use crate::{api::NextPage, database::models::User};
 use anyhow::Result;
 use askama_axum::IntoResponse;
 use async_trait::async_trait;
-use axum::middleware::{from_fn, FromFnLayer, Next};
 use axum::{extract::Query, http::StatusCode, response::Redirect, Extension, Form};
 use axum_login::{AuthUser, AuthnBackend, AuthzBackend, UserId};
 use axum_macros::debug_handler;
@@ -95,7 +94,7 @@ pub async fn create_session_resources() -> (Backend, SessionManagerLayer<MemoryS
             .map_err(|err| println!("ERROR: cannot establish db connection: {err}"))
             .unwrap(),
         SessionManagerLayer::new(MemoryStore::default())
-            .with_secure(false)
+            .with_secure(true)
             .with_expiry(Expiry::OnInactivity(Duration::days(1))),
     )
 }

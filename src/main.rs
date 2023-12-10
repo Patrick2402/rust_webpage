@@ -10,16 +10,18 @@ use crate::{
 use anyhow::Result;
 use axum::{
     error_handling::HandleErrorLayer,
-    http::StatusCode,
+    http::{StatusCode, header::{X_FRAME_OPTIONS, STRICT_TRANSPORT_SECURITY, CACHE_CONTROL}, HeaderValue, HeaderMap},
     routing::{delete, get, post},
     BoxError, Extension, Router, Server,
 };
+use axum_csrf::{CsrfConfig, CsrfLayer};
 use axum_login::{login_required, permission_required, AuthManagerLayer};
 use front::{
     auth::{login_page, register_page, root_page},
     site::user_page,
 };
 use sqlx::PgPool;
+use tower_default_headers::DefaultHeadersLayer;
 use std::{net::SocketAddr, str::FromStr};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
@@ -44,6 +46,8 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let config = CsrfConfig::default();
+
     let query_pool = PgPool::connect(DATABASE_URL).await?;
     create_admin_user(&query_pool)
         .await
@@ -60,6 +64,11 @@ async fn main() -> Result<()> {
         }))
         .layer(AuthManagerLayer::new(backend, session_layer));
 
+    let mut default_headers = HeaderMap::new();
+    default_headers.insert(X_FRAME_OPTIONS, HeaderValue::from_static("deny"));
+    default_headers.insert(STRICT_TRANSPORT_SECURITY, HeaderValue::from_static("max-age=31536000"));
+    default_headers.insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
+
     let app = Router::new()
         .route("/admin", get(admin_page))
         .route("/admin/users", get(users))
@@ -75,12 +84,17 @@ async fn main() -> Result<()> {
         .nest_service("/assets", asset_service)
         .layer(Extension(query_pool))
         .layer(auth_service)
+        .layer(CsrfLayer::new(config))
+        .layer(DefaultHeadersLayer::new(default_headers))
         .layer(TraceLayer::new_for_http());
 
     // run it with hyper on localhost:3000
     let socket_addr = SocketAddr::from_str("0.0.0.0:3000")?;
 
-    println!("[Ester Egg - kuba nie nawidze cie za bugi <3] Listening on {}", socket_addr);
+    println!(
+        "[Ester Egg - kuba nie nawidze cie za bugi <3] Listening on {}",
+        socket_addr
+    );
 
     Server::bind(&socket_addr)
         .serve(app.into_make_service())
