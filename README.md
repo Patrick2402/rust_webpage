@@ -1,6 +1,6 @@
 # helo this is some kind of app
 
-[![build + test](https://github.com/Patrick2402/rust_webpage/actions/workflows/rust.yml/badge.svg)](https://github.com/Patrick2402/rust_webpage/workflows/rust.yml)
+[![Quality Gate Status](http://18.193.102.105:9000/api/project_badges/measure?project=Test&metric=alert_status&token=sqb_804b64e0027f0d32df4ac3e0f845aee0a6d35a75)](http://18.193.102.105:9000/dashboard?id=Test)
 ## TODO:
 ```
 # huge todo: make the website usable
